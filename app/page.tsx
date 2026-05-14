@@ -5,7 +5,7 @@ import ProjectForm from "@/components/ProjectForm";
 import ContentPreview from "@/components/ContentPreview";
 import ExportPanel from "@/components/ExportPanel";
 import HistoryPanel from "@/components/HistoryPanel";
-import type { ProjectInfo, PresentationContent } from "@/types";
+import type { ProjectInfo, PresentationContent, TemplateColors } from "@/types";
 
 type Step = "form" | "preview" | "export";
 
@@ -37,6 +37,7 @@ export default function Home() {
   const [content, setContent] = useState<PresentationContent | null>(null);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
+  const [templateColors, setTemplateColors] = useState<TemplateColors | null>(null);
 
   async function handleGenerate() {
     setGenerating(true);
@@ -63,6 +64,7 @@ export default function Home() {
     setContent(null);
     setFormData(EMPTY_FORM);
     setError("");
+    setTemplateColors(null);
   }
 
   const currentStepIdx = STEPS.findIndex((s) => s.id === step);
@@ -166,6 +168,7 @@ export default function Home() {
                 onChange={setFormData}
                 onSubmit={handleGenerate}
                 loading={generating}
+                onTemplateColors={setTemplateColors}
               />
             </div>
             <HistoryPanel />
@@ -241,7 +244,7 @@ export default function Home() {
                   <p className="text-sm text-gray-500">{content.clientName} · 13 slides · SEONGON Template</p>
                 </div>
               </div>
-              <ExportPanel content={content} onReset={handleReset} />
+              <ExportPanel content={content} onReset={handleReset} templateColors={templateColors} />
             </div>
           </div>
         )}
