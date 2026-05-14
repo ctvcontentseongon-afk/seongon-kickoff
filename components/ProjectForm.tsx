@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useRef } from "react";
-import type { ProjectInfo } from "@/types";
+import type { ProjectInfo, TemplateColors } from "@/types";
 
 interface Props {
   data: ProjectInfo;
   onChange: (data: ProjectInfo) => void;
   onSubmit: () => void;
   loading: boolean;
+  onTemplateColors?: (colors: TemplateColors | null) => void;
 }
 
 const FIELDS: {
@@ -39,13 +40,16 @@ const SOURCE_HINTS = [
   { icon: "🌐", name: "Trang web bất kỳ", hint: "URL công khai, không cần đăng nhập" },
 ];
 
-export default function ProjectForm({ data, onChange, onSubmit, loading }: Props) {
+export default function ProjectForm({ data, onChange, onSubmit, loading, onTemplateColors }: Props) {
   const [urlInput, setUrlInput] = useState("");
   const [extracting, setExtracting] = useState(false);
   const [extractError, setExtractError] = useState("");
   const [extractedSource, setExtractedSource] = useState<{ label: string; url: string } | null>(null);
   const [filledCount, setFilledCount] = useState(0);
   const [templateName, setTemplateName] = useState("");
+  const [templateParsing, setTemplateParsing] = useState(false);
+  const [templateError, setTemplateError] = useState("");
+  const [templateParsed, setTemplateParsed] = useState<TemplateColors | null>(null);
   const templateInputRef = useRef<HTMLInputElement>(null);
 
   const update = (key: keyof ProjectInfo, value: string) =>
@@ -196,36 +200,95 @@ export default function ProjectForm({ data, onChange, onSubmit, loading }: Props
       </div>
 
       {/* ── Template upload ── */}
-      <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
-        <div className="w-8 h-8 bg-[#1A1A2E]/10 rounded-lg flex items-center justify-center flex-shrink-0">
-          <svg className="h-4 w-4 text-[#1A1A2E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-          </svg>
+      <div className="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div className="w-8 h-8 bg-[#1A1A2E]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+            <svg className="h-4 w-4 text-[#1A1A2E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-gray-700">Mẫu Slide Kickoff</p>
+            <p className="text-[10px] text-gray-400 truncate">
+              {templateParsed
+                ? `✓ Đọc màu thành công — ${templateParsed.fileName}`
+                : templateName
+                ? templateName
+                : "SEONGON Standard (Navy + Orange)"}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => templateInputRef.current?.click()}
+            disabled={templateParsing}
+            className="text-xs text-[#FF6B35] hover:text-orange-700 font-semibold flex-shrink-0 border border-orange-200 rounded-lg px-3 py-1.5 hover:bg-orange-50 transition-colors disabled:opacity-50"
+          >
+            {templateParsing ? "Đang đọc..." : templateName ? "Đổi mẫu" : "Upload .pptx"}
+          </button>
+          <input
+            ref={templateInputRef}
+            type="file"
+            accept=".pptx,.ppt"
+            className="hidden"
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              e.target.value = "";
+              if (!f) return;
+              setTemplateName(f.name);
+              setTemplateError("");
+              setTemplateParsing(true);
+              setTemplateParsed(null);
+              onTemplateColors?.(null);
+              try {
+                const fd = new FormData();
+                fd.append("file", f);
+                const res = await fetch("/api/template", { method: "POST", body: fd });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || "Lỗi đọc template");
+                const colors: TemplateColors = json.colors;
+                setTemplateParsed(colors);
+                onTemplateColors?.(colors);
+              } catch (err) {
+                setTemplateError(err instanceof Error ? err.message : "Lỗi");
+              } finally {
+                setTemplateParsing(false);
+              }
+            }}
+          />
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-gray-700">Mẫu Slide Kickoff</p>
-          <p className="text-[10px] text-gray-400">
-            {templateName ? templateName : "SEONGON Standard Template (Navy + Orange)"}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => templateInputRef.current?.click()}
-          className="text-xs text-[#FF6B35] hover:text-orange-700 font-semibold flex-shrink-0 border border-orange-200 rounded-lg px-3 py-1.5 hover:bg-orange-50 transition-colors"
-        >
-          {templateName ? "Đổi mẫu" : "Upload .pptx"}
-        </button>
-        <input
-          ref={templateInputRef}
-          type="file"
-          accept=".pptx,.ppt"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) setTemplateName(f.name);
-            e.target.value = "";
-          }}
-        />
+
+        {/* Color preview strip */}
+        {templateParsed && (
+          <div className="px-4 pb-3 flex items-center gap-3">
+            <div className="flex gap-1.5 items-center">
+              <div
+                className="w-6 h-6 rounded border border-gray-200"
+                style={{ backgroundColor: `#${templateParsed.primary}` }}
+                title={`Primary: #${templateParsed.primary}`}
+              />
+              <div
+                className="w-6 h-6 rounded border border-gray-200"
+                style={{ backgroundColor: `#${templateParsed.primaryMid}` }}
+              />
+              <div
+                className="w-6 h-6 rounded border border-gray-200"
+                style={{ backgroundColor: `#${templateParsed.primaryLight}` }}
+              />
+              <div
+                className="w-6 h-6 rounded border border-gray-200"
+                style={{ backgroundColor: `#${templateParsed.accent}` }}
+                title={`Accent: #${templateParsed.accent}`}
+              />
+            </div>
+            <p className="text-[10px] text-gray-500">
+              Màu này sẽ được dùng trong file PowerPoint xuất ra
+            </p>
+          </div>
+        )}
+
+        {templateError && (
+          <p className="px-4 pb-2 text-[10px] text-red-500">{templateError}</p>
+        )}
       </div>
 
       {/* ── Divider ── */}
