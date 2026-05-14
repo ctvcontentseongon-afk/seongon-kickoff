@@ -1,14 +1,15 @@
 "use client";
 
-import type { PresentationContent } from "@/types";
+import type { PresentationContent, TemplateColors } from "@/types";
 import { useState } from "react";
 
 interface Props {
   content: PresentationContent;
   onReset: () => void;
+  templateColors?: TemplateColors | null;
 }
 
-export default function ExportPanel({ content, onReset }: Props) {
+export default function ExportPanel({ content, onReset, templateColors }: Props) {
   const [exporting, setExporting] = useState(false);
   const [result, setResult] = useState<{
     driveLink?: string;
@@ -24,7 +25,7 @@ export default function ExportPanel({ content, onReset }: Props) {
       const res = await fetch("/api/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, templateColors: templateColors ?? null }),
       });
 
       if (!res.ok) {
@@ -56,6 +57,27 @@ export default function ExportPanel({ content, onReset }: Props) {
 
   return (
     <div className="space-y-5">
+      {/* Template badge */}
+      {templateColors ? (
+        <div className="flex items-center gap-2 bg-[#1A1A2E]/5 rounded-xl px-3 py-2 border border-[#1A1A2E]/10">
+          <div className="flex gap-1">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: `#${templateColors.primary}` }} />
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: `#${templateColors.accent}` }} />
+          </div>
+          <p className="text-xs text-gray-600 flex-1 truncate">
+            Màu từ template: <span className="font-semibold">{templateColors.fileName}</span>
+          </p>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 border border-gray-100">
+          <div className="flex gap-1">
+            <div className="w-4 h-4 rounded bg-[#1A1A2E]" />
+            <div className="w-4 h-4 rounded bg-[#FF6B35]" />
+          </div>
+          <p className="text-xs text-gray-500">Màu mặc định: SEONGON Standard (Navy + Orange)</p>
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
