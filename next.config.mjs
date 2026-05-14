@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ["pptxgenjs"],
+    serverComponentsExternalPackages: ["pptxgenjs", "mammoth"],
   },
   async headers() {
     return [
