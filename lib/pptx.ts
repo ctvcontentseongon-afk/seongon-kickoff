@@ -1,105 +1,44 @@
 import PptxGenJS from "pptxgenjs";
-import type { PresentationContent } from "@/types";
-
-const C = {
-  orange: "FF6B35",
-  navy: "1A1A2E",
-  navyMid: "16213E",
-  navyLight: "0F3460",
-  white: "FFFFFF",
-  lightGray: "F5F5F5",
-  textDark: "2D2D2D",
-  textMid: "555555",
-  green: "27AE60",
-  yellow: "F39C12",
-  red: "E74C3C",
-};
-
-function addSlideHeader(
-  slide: PptxGenJS.Slide,
-  slideNum: number,
-  title: string
-) {
-  slide.addShape("rect", {
-    x: 0,
-    y: 0,
-    w: "100%",
-    h: 1.1,
-    fill: { color: C.navy },
-  });
-  slide.addShape("rect", {
-    x: 0,
-    y: 0,
-    w: 0.08,
-    h: 1.1,
-    fill: { color: C.orange },
-  });
-  slide.addText(title, {
-    x: 0.25,
-    y: 0.12,
-    w: 8.5,
-    h: 0.7,
-    fontSize: 24,
-    bold: true,
-    color: C.white,
-    fontFace: "Arial",
-  });
-  slide.addText(`${slideNum}`, {
-    x: 9.0,
-    y: 0.2,
-    w: 0.6,
-    h: 0.5,
-    fontSize: 13,
-    color: C.orange,
-    align: "right",
-    fontFace: "Arial",
-  });
-  slide.addShape("rect", {
-    x: 0,
-    y: 6.9,
-    w: "100%",
-    h: 0.1,
-    fill: { color: C.orange },
-  });
-}
-
-function addBulletSection(
-  slide: PptxGenJS.Slide,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  header: string,
-  items: string[],
-  headerColor = C.orange
-) {
-  slide.addText(header, {
-    x,
-    y,
-    w,
-    h: 0.38,
-    fontSize: 11,
-    bold: true,
-    color: headerColor,
-    fontFace: "Arial",
-  });
-  const bullets = items.map((item) => ({
-    text: item,
-    options: { bullet: { type: "bullet" as const }, fontSize: 10, color: C.textDark, fontFace: "Arial" },
-  }));
-  slide.addText(bullets, {
-    x,
-    y: y + 0.38,
-    w,
-    h: h - 0.38,
-    valign: "top",
-    fontFace: "Arial",
-  });
-}
+import type { PresentationContent, TemplateColors } from "@/types";
 
 export async function buildPresentation(
-  content: PresentationContent
+  content: PresentationContent,
+  templateColors?: TemplateColors | null
 ): Promise<Buffer> {
+  const C = {
+    orange:    templateColors?.accent       ?? "FF6B35",
+    navy:      templateColors?.primary      ?? "1A1A2E",
+    navyMid:   templateColors?.primaryMid   ?? "16213E",
+    navyLight: templateColors?.primaryLight ?? "0F3460",
+    white:     "FFFFFF",
+    lightGray: "F5F5F5",
+    textDark:  "2D2D2D",
+    textMid:   "555555",
+    green:     "27AE60",
+    yellow:    "F39C12",
+    red:       "E74C3C",
+  };
+
+  function addSlideHeader(slide: PptxGenJS.Slide, slideNum: number, title: string) {
+    slide.addShape("rect", { x: 0, y: 0, w: "100%", h: 1.1, fill: { color: C.navy } });
+    slide.addShape("rect", { x: 0, y: 0, w: 0.08, h: 1.1, fill: { color: C.orange } });
+    slide.addText(title, { x: 0.25, y: 0.12, w: 8.5, h: 0.7, fontSize: 24, bold: true, color: C.white, fontFace: "Arial" });
+    slide.addText(`${slideNum}`, { x: 9.0, y: 0.2, w: 0.6, h: 0.5, fontSize: 13, color: C.orange, align: "right", fontFace: "Arial" });
+    slide.addShape("rect", { x: 0, y: 6.9, w: "100%", h: 0.1, fill: { color: C.orange } });
+  }
+
+  function addBulletSection(
+    slide: PptxGenJS.Slide, x: number, y: number, w: number, h: number,
+    header: string, items: string[], headerColor = C.orange
+  ) {
+    slide.addText(header, { x, y, w, h: 0.38, fontSize: 11, bold: true, color: headerColor, fontFace: "Arial" });
+    const bullets = items.map((item) => ({
+      text: item,
+      options: { bullet: { type: "bullet" as const }, fontSize: 10, color: C.textDark, fontFace: "Arial" },
+    }));
+    slide.addText(bullets, { x, y: y + 0.38, w, h: h - 0.38, valign: "top", fontFace: "Arial" });
+  }
+
   const pptx = new PptxGenJS();
   pptx.layout = "LAYOUT_WIDE";
   pptx.author = "SEONGON";
