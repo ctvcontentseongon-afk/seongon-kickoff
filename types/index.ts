@@ -92,3 +92,11 @@ export interface ExportResult {
   fileName: string;
   fileId: string;
 }
+
+export interface TemplateColors {
+  primary: string;   // replaces navy (header/background)
+  accent: string;    // replaces orange (highlights/accents)
+  primaryMid: string;
+  primaryLight: string;
+  fileName: string;
+}
