@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildPresentation } from "@/lib/pptx";
 import { uploadToDrive } from "@/lib/drive";
-import type { PresentationContent } from "@/types";
+import type { PresentationContent, TemplateColors } from "@/types";
 
 export async function POST(req: NextRequest) {
   try {
-    const { content }: { content: PresentationContent } = await req.json();
+    const body: { content: PresentationContent; templateColors?: TemplateColors | null } = await req.json();
+    const { content, templateColors } = body;
 
-    const buffer = await buildPresentation(content);
+    const buffer = await buildPresentation(content, templateColors);
 
     const useGoogleDrive = !!process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
 
